@@ -8,8 +8,9 @@ router.post("/register",registerUser);
 router.post("/login",loginUser);
 router.post("/logout",logoutUser);
 
-router.get("/me",protect,(req,res)=>{
-  return res.json(req.user)
+router.get("/me", protect, (req, res) => {
+  // always return a wrapped object so frontend can treat all auth responses the same
+  return res.json({ user: req.user });
 })
 
 export default router

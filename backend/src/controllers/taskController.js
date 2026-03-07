@@ -4,18 +4,25 @@ const allowedStatus = ["pending", "in_progress", "completed"];
 export const createTask = async (req, res) => {
   try {
     let { title, description, status } = req.body;
-    if (!title) {
+
+    if (!title || typeof title !== 'string' || !title.trim()) {
       return res.status(400).json({ message: "Title is required" });
     }
+
     title = title.trim();
     description = description?.trim();
+
+    if (title.length > 200) {
+      return res.status(400).json({ message: "Title too long" });
+    }
 
     if (status && !allowedStatus.includes(status)) {
       return res.status(400).json({ message: "Invalid task status" });
     }
+
     const task = await pool.query(
       "INSERT INTO tasks(title,description,status,user_id) VALUES($1,$2,$3,$4) RETURNING *",
-      [title, description || null, status || "pending", req.user.id],
+      [title, description || null, status || "pending", req.user.id]
     );
 
     return res.status(201).json(task.rows[0]);

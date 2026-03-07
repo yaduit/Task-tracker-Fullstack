@@ -2,12 +2,31 @@ import pool from "../config/db.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/generateToken.js";
 
+// reusable options used for all auth cookies
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "Strict",
+  maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+};
+
+// basic email pattern, enough for front/back validation
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields required" });
+    }
+
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email address" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
     const normalizedEmail = email.toLowerCase();
@@ -22,22 +41,22 @@ export const registerUser = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    // quote "role" in RETURNING to make sure the column is returned (role is a
-    // keyword in PG and can otherwise be interpreted as the session role). the
-    // alias keeps the property name consistent for the frontend.
+    // explicitly specify a default role to avoid unexpected nulls if DB default
     const user = await pool.query(
-      'INSERT INTO users(name,email,password) VALUES($1,$2,$3) RETURNING id,name,email,"role" AS role',
-      [name, normalizedEmail, hashed]
+      'INSERT INTO users(name,email,password,role) VALUES($1,$2,$3,$4) RETURNING id,name,email,"role" AS role',
+      [name, normalizedEmail, hashed, 'user']
     );
 
     const token = generateToken(user.rows[0].id, user.rows[0].role);
 
-    res.cookie("token", token, { httpOnly: true });
+    res.cookie("token", token, cookieOptions);
 
-    res.status(201).json({message: 'User registered sucessfully',
+    res.status(201).json({
+      message: 'User registered successfully',
       user: user.rows[0],
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -48,7 +67,11 @@ export const loginUser = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ message: "All fields required" });
     }
-    // avoid SELECT * so we can control the columns; quote "role" as above
+
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email address" });
+    }
+
     const user = await pool.query(
       'SELECT id,name,email,password,"role" AS role FROM users WHERE email=$1',
       [email.toLowerCase()]
@@ -68,17 +91,14 @@ export const loginUser = async (req, res) => {
 
     const token = generateToken(userData.id, userData.role);
 
-    res.cookie("token", token, { httpOnly: true });
+    res.cookie("token", token, cookieOptions);
 
-    res.json({message: "Login successfull",
-      user: {
-        id: userData.id,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-      },
+    res.json({
+      message: "Login successful",
+      user: userData,
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -94,12 +114,8 @@ export const logoutUser = async (req, res) => {
       })
     }
 
-    res.cookie("token", "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      expires: new Date(0)
-    })
+    // clear using the same attributes so browser will remove it
+    res.cookie("token", "", { ...cookieOptions, expires: new Date(0) });
 
     return res.status(200).json({
       message: "Logged out successfully"
