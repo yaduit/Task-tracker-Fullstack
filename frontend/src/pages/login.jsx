@@ -1,109 +1,120 @@
-import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import { useAuth } from "../contexts/useAuth.js"
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/useAuth.js";
+import { Button, Input, Card, Container } from "../components/ui";
+import ErrorMessage from "../components/feedback/errorMessage.jsx";
 
 const Login = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const { login } = useAuth()
-  const navigate = useNavigate()
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.email) errors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = "Email is invalid";
+    if (!formData.password) errors.password = "Password is required";
+    
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear field error when user types
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
 
   const handleSubmit = async (e) => {
-
-    e.preventDefault()
-
-    setError("")
-
-    if (!email || !password) {
-      return setError("Email and password are required")
-    }
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setError("");
+    setLoading(true);
 
     try {
-
-      setLoading(true)
-
-      await login({ email, password })
-
-      navigate("/dashboard")
-
+      await login(formData);
+      navigate("/dashboard");
     } catch (err) {
-
-      setError(
-        err.response?.data?.message || "Login failed"
-      )
-
+      setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
-
-      setLoading(false)
-
+      setLoading(false);
     }
-
-  }
+  };
 
   return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <Container size="sm">
+        <Card className="w-full">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Sign in to manage your tasks
+            </p>
+          </div>
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+          {error && <ErrorMessage message={error} />}
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded shadow-md w-96"
-      >
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label="Email Address"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="you@example.com"
+              required
+              error={fieldErrors.email}
+              disabled={loading}
+            />
 
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          Login
-        </h2>
+            <Input
+              label="Password"
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+              required
+              error={fieldErrors.password}
+              disabled={loading}
+            />
 
-        {error && (
-          <p className="text-red-500 mb-4">{error}</p>
-        )}
+            <Button
+              type="submit"
+              variant="primary"
+              fullWidth
+              disabled={loading}
+              size="lg"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e)=>setEmail(e.target.value)}
-          className="w-full border p-2 mb-4 rounded"
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e)=>setPassword(e.target.value)}
-          className="w-full border p-2 mb-4 rounded"
-        />
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-
-        <p className="text-center mt-4 text-sm">
-
-          Don't have an account?
-
-          <Link
-            to="/register"
-            className="text-blue-600 ml-1"
-          >
-            Register
-          </Link>
-
-        </p>
-
-      </form>
-
+          <p className="mt-6 text-center text-sm text-gray-600">
+            Don't have an account?{" "}
+            <Link 
+              to="/register" 
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Create an account
+            </Link>
+          </p>
+        </Card>
+      </Container>
     </div>
+  );
+};
 
-  )
-
-}
-
-export default Login
+export default Login;

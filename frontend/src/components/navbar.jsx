@@ -1,26 +1,57 @@
 import { useAuth } from "../contexts/useAuth.js";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "../components/ui";
+
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   return (
-    <div className="bg-gray-800 text-white p-4 flex justify-between">
-      <h1 className="font-bold">Task Tracker</h1>
+    <nav className="bg-gray-800 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="text-xl font-bold hover:text-gray-300">
+              Task Tracker
+            </Link>
+            
+            {/* Mobile menu button - could be expanded for more options */}
+            <div className="sm:hidden">
+              <span className="text-sm text-gray-300">{user?.name}</span>
+            </div>
+          </div>
 
-      <div className="flex items-center gap-4">
-        <span>{user?.name}</span>
-
-        {user?.role === "admin" && (
-          <Link to="/admin" className="bg-blue-500 px-3 py-1 rounded">
-            Admin
-          </Link>
-        )}
-        
-        <button onClick={logout} className="bg-red-500 px-3 py-1 rounded">
-          Logout
-        </button>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mt-2 sm:mt-0">
+            <span className="text-sm text-gray-300 hidden sm:inline">
+              Welcome, {user?.name}
+            </span>
+            
+            <div className="flex flex-wrap items-center gap-2">
+              {user?.role === "admin" && (
+                <Link to="/admin">
+                  <Button variant="outline" size="sm" className="text-white border-white hover:bg-gray-700">
+                    Admin Panel
+                  </Button>
+                </Link>
+              )}
+              
+              <Button 
+                variant="danger" 
+                size="sm"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </nav>
   );
 };
 
