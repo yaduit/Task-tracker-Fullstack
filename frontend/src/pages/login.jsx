@@ -1,30 +1,44 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { useAuth } from "../context/useAuth.js"
+import { useNavigate, Link } from "react-router-dom"
+import { useAuth } from "../contexts/useAuth.js"
 
 const Login = () => {
 
   const { login } = useAuth()
-
   const navigate = useNavigate()
 
-  const [email,setEmail] = useState("")
-  const [password,setPassword] = useState("")
-  const [error,setError] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
 
     e.preventDefault()
 
-    try{
+    setError("")
 
-      await login({email,password})
+    if (!email || !password) {
+      return setError("Email and password are required")
+    }
+
+    try {
+
+      setLoading(true)
+
+      await login({ email, password })
 
       navigate("/dashboard")
 
-    }catch(err){
+    } catch (err) {
 
-      setError("Invalid credentials")
+      setError(
+        err.response?.data?.message || "Login failed"
+      )
+
+    } finally {
+
+      setLoading(false)
 
     }
 
@@ -34,7 +48,7 @@ const Login = () => {
 
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
 
-      <form 
+      <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded shadow-md w-96"
       >
@@ -65,10 +79,24 @@ const Login = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
+
+        <p className="text-center mt-4 text-sm">
+
+          Don't have an account?
+
+          <Link
+            to="/register"
+            className="text-blue-600 ml-1"
+          >
+            Register
+          </Link>
+
+        </p>
 
       </form>
 
