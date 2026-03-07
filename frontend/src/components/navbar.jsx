@@ -1,34 +1,27 @@
-import { useAuth } from "../contexts/useAuth.js"
-
+import { useAuth } from "../contexts/useAuth.js";
+import { Link } from "react-router-dom";
 const Navbar = () => {
-
-  const { user, logout } = useAuth()
+  const { user, logout } = useAuth();
 
   return (
-
     <div className="bg-gray-800 text-white p-4 flex justify-between">
-
-      <h1 className="font-bold">
-        Task Tracker
-      </h1>
+      <h1 className="font-bold">Task Tracker</h1>
 
       <div className="flex items-center gap-4">
-
         <span>{user?.name}</span>
 
-        <button
-          onClick={logout}
-          className="bg-red-500 px-3 py-1 rounded"
-        >
+        {user?.role === "admin" && (
+          <Link to="/admin" className="bg-blue-500 px-3 py-1 rounded">
+            Admin
+          </Link>
+        )}
+        
+        <button onClick={logout} className="bg-red-500 px-3 py-1 rounded">
           Logout
         </button>
-
       </div>
-
     </div>
+  );
+};
 
-  )
-
-}
-
-export default Navbar
+export default Navbar;

@@ -14,7 +14,10 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const res = await api.get("/auth/me")
-      setUser(res.data)
+      // some endpoints return { user: {...} } while /me returns the object directly
+      // normalize so that callers can always read `user.role` safely.
+      const payload = res.data.user || res.data
+      setUser(payload)
     } catch (err) {
       setUser(null)
     } finally {
