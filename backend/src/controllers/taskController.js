@@ -3,7 +3,7 @@ import pool from "../config/db.js";
 const allowedStatus = ["pending", "in_progress", "completed"];
 export const createTask = async (req, res) => {
   try {
-    const { title, description, status } = req.body;
+    let { title, description, status } = req.body;
     if (!title) {
       return res.status(400).json({ message: "Title is required" });
     }
@@ -94,7 +94,7 @@ export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const existingTask = await pool.query("DELETE FROM tasks WHERE id=$1", [
+    const existingTask = await pool.query("SELECT * FROM tasks WHERE id=$1", [
       id,
     ]);
     if (existingTask.rows.length === 0) {
