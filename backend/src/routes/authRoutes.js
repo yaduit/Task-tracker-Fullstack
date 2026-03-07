@@ -1,8 +1,8 @@
 import express from "express";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import pool from "../config/db.js";
 import { protect } from "../middleware/authMiddleware.js";
+import { generateToken } from "../utils/generateToken.js";
 
 const router = express.Router();
 
@@ -13,11 +13,6 @@ const cookieOptions = {
   maxAge: 30 * 24 * 60 * 60 * 1000, //30 days
 };
 
-const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
-};
 
 //Register
 router.post("/register", async (req, res) => {
