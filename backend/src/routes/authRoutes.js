@@ -9,7 +9,7 @@ router.post("/login",loginUser);
 router.post("/logout",logoutUser);
 
 router.get("/me",protect,(req,res)=>{
-  res.json(req.user)
+  return res.json(req.user)
 })
 
 export default router

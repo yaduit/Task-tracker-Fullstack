@@ -16,8 +16,9 @@ router.get(
 
     try {
 
+      // same quoting for role to avoid PostgreSQL returning the session role
       const users = await pool.query(
-        "SELECT id,name,email,role FROM users"
+        'SELECT id,name,email,"role" AS role FROM users'
       )
 
       res.json(users.rows)

@@ -22,9 +22,12 @@ export const registerUser = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
+    // quote "role" in RETURNING to make sure the column is returned (role is a
+    // keyword in PG and can otherwise be interpreted as the session role). the
+    // alias keeps the property name consistent for the frontend.
     const user = await pool.query(
-      "INSERT INTO users(name,email,password) VALUES($1,$2,$3) RETURNING id,name,email,role",
-      [name, normalizedEmail, hashed],
+      'INSERT INTO users(name,email,password) VALUES($1,$2,$3) RETURNING id,name,email,"role" AS role',
+      [name, normalizedEmail, hashed]
     );
 
     const token = generateToken(user.rows[0].id, user.rows[0].role);
@@ -45,9 +48,11 @@ export const loginUser = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ message: "All fields required" });
     }
-    const user = await pool.query("SELECT * FROM users WHERE email=$1", [
-      email.toLowerCase(),
-    ]);
+    // avoid SELECT * so we can control the columns; quote "role" as above
+    const user = await pool.query(
+      'SELECT id,name,email,password,"role" AS role FROM users WHERE email=$1',
+      [email.toLowerCase()]
+    );
 
     if (user.rows.length === 0) {
       return res.status(401).json({ message: "Invalid credentials" });

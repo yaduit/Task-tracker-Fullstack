@@ -19,7 +19,7 @@ describe("Auth API", () => {
 
   })
 
-  test("should login user", async () => {
+  test("should login user and return role", async () => {
 
     const res = await request(app)
       .post("/auth/login")
@@ -29,7 +29,16 @@ describe("Auth API", () => {
       })
 
     expect(res.statusCode).toBe(200)
+    expect(res.body.user).toBeDefined()
+    expect(res.body.user.role).toBe("user") // default role for registered user
 
+    // also hit /me using the cookie that was just set
+    const cookie = res.headers["set-cookie"][0]
+    const me = await request(app)
+      .get("/auth/me")
+      .set("Cookie", cookie)
+    expect(me.statusCode).toBe(200)
+    expect(me.body.role).toBe("user")
   })
 
 })
