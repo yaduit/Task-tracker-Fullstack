@@ -1,17 +1,14 @@
-import express from express
-import cors from cors
-import dotenv from dotenv
+import express from 'express'
+import cors from 'cors'
 import cookieParser from 'cookie-parser'
 
 import authRoutes from './routes/authRoutes.js'
 import taskRoutes from './routes/taskRoutes.js'
 
-dotenv.config();
-
 const app = express();
 
 app.use(cors({
-    origin: true,
+    origin: process.env.CLIENT_URL,
     credentials: true
 }));
 app.use(express.json());
