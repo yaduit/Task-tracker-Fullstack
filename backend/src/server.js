@@ -9,7 +9,11 @@ import adminRoutes from './routes/adminRoutes.js'
 const app = express();
 
 app.use(cors({
-    origin: process.env.CLIENT_URL,
+    origin:[
+        process.env.CLIENT_URL,
+        "https://task-tracker-fullstack-nine.vercel.app/"
+        
+    ],
     credentials: true
 }));
 app.use(express.json());
