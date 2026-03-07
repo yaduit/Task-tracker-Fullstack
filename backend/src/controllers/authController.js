@@ -31,7 +31,7 @@ export const registerUser = async (req, res) => {
 
     res.cookie("token", token, { httpOnly: true });
 
-    res.status(201).json({
+    res.status(201).json({message: 'User registered sucessfully',
       user: user.rows[0],
     });
   } catch (err) {
@@ -65,7 +65,7 @@ export const loginUser = async (req, res) => {
 
     res.cookie("token", token, { httpOnly: true });
 
-    res.json({
+    res.json({message: "Login successfull",
       user: {
         id: userData.id,
         name: userData.name,
@@ -75,5 +75,35 @@ export const loginUser = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const logoutUser = async (req, res) => {
+  try {
+
+    const token = req.cookies?.token
+
+    if (!token) {
+      return res.status(400).json({
+        message: "User already logged out"
+      })
+    }
+
+    res.cookie("token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      expires: new Date(0)
+    })
+
+    return res.status(200).json({
+      message: "Logged out successfully"
+    })
+
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({
+      message: "Internal server error"
+    })
   }
 };
