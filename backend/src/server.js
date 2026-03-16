@@ -11,7 +11,7 @@ const app = express();
 app.use(cors({
     origin:[
         process.env.CLIENT_URL,
-        "https://task-tracker-fullstack-nine.vercel.app/"
+        "https://task-tracker-fullstack-nine.vercel.app"
         
     ],
     credentials: true
